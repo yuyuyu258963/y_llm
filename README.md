@@ -4,7 +4,7 @@
 
 `mini-vLLM` 是一套教学优先的增量式教程与代码库。它不试图把生产版 vLLM 的 CUDA kernel、分布式并行和全部调度策略压缩到几百行；它要做的是把一个推理服务真正需要解决的问题逐个拆开，并在每一步留下可以运行、可以测试、可以和前一步对照的实现。
 
-**在线教程入口（GitHub Pages 准备就绪）：** [`docs/index.md`](docs/index.md) · [完整学习指南](docs/learning-guide.md) · [真实模型扩展](docs/hf-track.md)
+**课程导航：** [`docs/index.md`](docs/index.md) · [完整学习指南](docs/learning-guide.md) · [真实模型扩展](docs/hf-track.md)
 
 ---
 
@@ -186,41 +186,6 @@ python -m unittest tests.test_hf_integration -v
 | 服务正确性 | health 与 completion 使用正确边界 | toy HTTP tests + 13a loopback lesson |
 
 当前已在本机完成过：24 项普通测试通过；真实 Qwen 的两项 opt-in 集成测试通过；真实 HTTP `/health` 与 `/v1/chat/completions` 通过。普通测试刻意不下载模型，真实模型测试也必须由环境变量显式开启。
-
----
-
-## 发布为 GitHub Pages 在线教程
-
-本仓库已经准备好了 GitHub Pages 源目录：
-
-```text
-docs/
-├── index.md                  # 在线教程首页
-├── _config.yml               # Jekyll 标题、描述与主题
-├── learning-guide.md         # toy 主线的逐章教程
-├── hf-track.md               # 真实 Qwen 扩展路线
-└── incremental-contract.md   # 增量架构契约
-```
-
-当前仓库的默认分支是 `master`，推荐使用 **Deploy from a branch → `master` → `/docs`**：它没有前端构建步骤，正适合当前 Markdown 教程。GitHub 官方也建议不需要自定义构建时直接从分支和 `/docs` 目录发布。[GitHub Pages 发布源说明](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site)
-
-### 第一次发布
-
-1. 在 GitHub 创建一个普通仓库，例如 `mini_vllm`，并把当前项目推送到默认分支 `master`。
-2. 进入仓库 **Settings → Pages**。
-3. 在 **Build and deployment** 中选择 **Deploy from a branch**。
-4. 选择分支 `master` 和目录 `/docs`，保存。
-5. 等待 Pages 部署完成后，访问：
-
-   ```text
-   https://<你的 GitHub 用户名>.github.io/mini_vllm/
-   ```
-
-在此模式下，后续只要推送 `docs/` 中的 Markdown，教程站点就会随之更新。GitHub 也支持改用 GitHub Actions；当未来加入 MkDocs、Docusaurus、生成 API 文档或复杂前端构建时，再切换到 Actions 更合适。[GitHub 官方说明](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site)
-
-如果希望站点直接使用 `https://<用户名>.github.io/` 而不带 `/mini_vllm/`，需要把仓库命名为 `<用户名>.github.io`；这是 GitHub 的“用户站点”命名规则。[GitHub Pages quickstart](https://docs.github.com/en/pages/quickstart)
-
-> 发布前检查：GitHub Pages 对外公开内容；不要把 Hugging Face token、缓存路径、测试日志或任何密钥提交进仓库。
 
 ---
 

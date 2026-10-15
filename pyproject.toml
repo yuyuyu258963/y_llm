@@ -1,0 +1,13 @@
+[project]
+name = "mini-vllm"
+version = "0.1.0"
+description = "A teaching-first single-GPU inference engine"
+requires-python = ">=3.10"
+dependencies = ["torch>=2.5"]
+
+[project.optional-dependencies]
+# Kept optional: Chapters 00-08 remain runnable without downloading a model.
+hf = ["transformers>=4.37", "safetensors>=0.4"]
+
+[tool.unittest]
+start-directory = "tests"

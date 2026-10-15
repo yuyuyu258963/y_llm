@@ -1,0 +1,7 @@
+title: mini-vLLM
+description: 从 CPU/GPU 协作到单卡推理服务的增量式教程
+theme: jekyll-theme-cayman
+lang: zh-CN
+markdown: kramdown
+kramdown:
+  input: GFM

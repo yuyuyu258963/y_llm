@@ -202,14 +202,14 @@ docs/
 └── incremental-contract.md   # 增量架构契约
 ```
 
-推荐使用 **Deploy from a branch → `main` → `/docs`**：它没有前端构建步骤，正适合当前 Markdown 教程。GitHub 官方也建议不需要自定义构建时直接从分支和 `/docs` 目录发布。[GitHub Pages 发布源说明](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site)
+当前仓库的默认分支是 `master`，推荐使用 **Deploy from a branch → `master` → `/docs`**：它没有前端构建步骤，正适合当前 Markdown 教程。GitHub 官方也建议不需要自定义构建时直接从分支和 `/docs` 目录发布。[GitHub Pages 发布源说明](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site)
 
 ### 第一次发布
 
-1. 在 GitHub 创建一个普通仓库，例如 `mini_vllm`，并把当前项目推送到默认分支 `main`。
+1. 在 GitHub 创建一个普通仓库，例如 `mini_vllm`，并把当前项目推送到默认分支 `master`。
 2. 进入仓库 **Settings → Pages**。
 3. 在 **Build and deployment** 中选择 **Deploy from a branch**。
-4. 选择分支 `main` 和目录 `/docs`，保存。
+4. 选择分支 `master` 和目录 `/docs`，保存。
 5. 等待 Pages 部署完成后，访问：
 
    ```text

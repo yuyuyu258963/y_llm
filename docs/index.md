@@ -41,7 +41,7 @@ title: mini-vLLM 教程
 
 ## 在线阅读
 
-这个目录可直接作为 GitHub Pages 的发布源。将仓库推送至 GitHub 后，在仓库 **Settings → Pages** 中选择 **Deploy from a branch**，发布分支选 `main`、目录选 `/docs`。站点地址通常为：
+这个目录可直接作为 GitHub Pages 的发布源。将仓库推送至 GitHub 后，在仓库 **Settings → Pages** 中选择 **Deploy from a branch**，发布分支选 `master`、目录选 `/docs`。站点地址通常为：
 
 ```text
 https://<GitHub 用户名>.github.io/<仓库名>/

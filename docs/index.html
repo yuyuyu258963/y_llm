@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="mini-vLLM：从 CPU/GPU 协作到单卡推理服务的增量式教程。"
+    />
+    <title>mini-vLLM · 从一张消费级 GPU 读懂推理系统</title>
+    <link rel="stylesheet" href="assets/site.css" />
+  </head>
+  <body>
+    <div class="page-glow glow-one"></div>
+    <div class="page-glow glow-two"></div>
+
+    <header class="site-header shell">
+      <a class="brand" href="#top" aria-label="mini-vLLM 首页">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>mini-vLLM</span>
+      </a>
+      <nav aria-label="页面导航">
+        <a href="#learn">能学到什么</a>
+        <a href="#path">学习路径</a>
+        <a href="#evidence">验证方法</a>
+        <a class="nav-github" href="https://github.com/yuyuyu258963/y_llm">GitHub ↗</a>
+      </nav>
+    </header>
+
+    <main id="top">
+      <section class="hero shell" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <p class="eyebrow"><span></span> TEACHING-FIRST · SINGLE GPU · VERIFIED</p>
+          <h1 id="hero-title">从一张消费级显卡开始，<em>读懂推理系统。</em></h1>
+          <p class="hero-lede">
+            不把 vLLM 当作黑盒。用一个可运行、可测试、可逐步替换的 mini 推理框架，亲手理解 CPU/GPU
+            协作、KV cache、连续批处理与真实模型服务。
+          </p>
+          <div class="hero-actions">
+            <a class="button button-primary" href="#path">从第 00 章开始 <span>↓</span></a>
+            <a class="button button-quiet" href="https://github.com/yuyuyu258963/y_llm/blob/master/docs/learning-guide.md">
+              阅读完整教程 <span>↗</span>
+            </a>
+          </div>
+          <dl class="hero-metrics" aria-label="项目摘要">
+            <div><dt>00 → 13a</dt><dd>可独立验证的章节</dd></div>
+            <div><dt>1 × GPU</dt><dd>消费级单卡学习路径</dd></div>
+            <div><dt>toy → Qwen</dt><dd>从原理到真实模型</dd></div>
+          </dl>
+        </div>
+
+        <div class="terminal-card" aria-label="一次可验证的 cached decode">
+          <div class="terminal-top"><span></span><span></span><span></span><b>correctness-oracle</b></div>
+          <div class="terminal-body">
+            <p><small>01</small><code>$ python lessons/01_prefill_decode.py</code></p>
+            <p><small>02</small><code class="muted">prefill(prompt)  →  K/V cache stays on GPU</code></p>
+            <p><small>03</small><code class="muted">decode(token, cache)  →  next token</code></p>
+            <p><small>04</small><code class="success">✓ cached output == full recompute</code></p>
+          </div>
+          <div class="terminal-footer"><span class="pulse"></span> CORRECTNESS BEFORE SPEED</div>
+        </div>
+      </section>
+
+      <section class="intro shell" id="learn" aria-labelledby="learn-title">
+        <div class="section-kicker">01 / LEARN BY BUILDING</div>
+        <div class="section-heading">
+          <h2 id="learn-title">你不是在“调用模型”，<br />而是在拆解一个推理服务。</h2>
+          <p>
+            每个概念都落在一段尽量小的代码上：先观察数据在哪个设备，再建立单请求的正确性基线，最后才让请求并发、让 cache 被复用、让模型通过 HTTP 服务运行。
+          </p>
+        </div>
+        <div class="capability-grid">
+          <article class="capability-card accent-cyan">
+            <span class="card-index">01</span>
+            <h3>CPU × GPU 边界</h3>
+            <p>看见 H2D、D2H 与 CUDA 同步点，理解为什么中间张量必须留在 GPU。</p>
+            <code>device.py</code>
+          </article>
+          <article class="capability-card accent-violet">
+            <span class="card-index">02</span>
+            <h3>KV cache 的正确性</h3>
+            <p>把 prefill 和 decode 拆开，并用完整重算作为逐 token 的数值 oracle。</p>
+            <code>toy_model.py</code>
+          </article>
+          <article class="capability-card accent-lime">
+            <span class="card-index">03</span>
+            <h3>调度与资源生命周期</h3>
+            <p>让 request、slot、block 都有明确的所有者和结束时刻，再引入连续批处理。</p>
+            <code>engine.py</code>
+          </article>
+          <article class="capability-card accent-orange">
+            <span class="card-index">04</span>
+            <h3>真实模型兼容</h3>
+            <p>使用 Qwen 的 native cache、GQA 布局与原生 generate，验证 toy 概念能迁移到真实权重。</p>
+            <code>hf_runner.py</code>
+          </article>
+        </div>
+      </section>
+
+      <section class="architecture shell" aria-labelledby="architecture-title">
+        <div class="section-kicker">02 / THE DATA PATH</div>
+        <div class="section-heading compact">
+          <h2 id="architecture-title">CPU 决定“做什么”，GPU 持有“算什么”。</h2>
+          <p>把跨设备边界压缩到 token ID，是理解推理延迟的第一把钥匙。</p>
+        </div>
+        <div class="architecture-flow">
+          <div class="flow-side cpu-side">
+            <span class="side-label">CPU</span>
+            <div class="flow-node"><b>HTTP / tokenizer</b><small>解析请求，构造 token IDs</small></div>
+            <div class="flow-node"><b>Request / Scheduler</b><small>管理状态、队列与 execution plan</small></div>
+          </div>
+          <div class="flow-bridge">
+            <span class="bridge-line"></span>
+            <span class="bridge-note top">H2D · token IDs + metadata</span>
+            <span class="bridge-note bottom">D2H · sampled token ID only</span>
+          </div>
+          <div class="flow-side gpu-side">
+            <span class="side-label">GPU</span>
+            <div class="flow-node"><b>ModelRunner</b><small>执行 prefill / decode，GPU argmax</small></div>
+            <div class="flow-node"><b>Model + KV cache</b><small>ToyAttentionLM / Qwen 与 K/V 状态</small></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="path-section shell" id="path" aria-labelledby="path-title">
+        <div class="path-intro">
+          <div>
+            <p class="section-kicker">03 / INCREMENTAL PATH</p>
+            <h2 id="path-title">先证明，再扩展。<br />每一层只多解决一个问题。</h2>
+          </div>
+          <p>
+            这不是把“最终代码”倒序讲一遍。新能力以 adapter 或新模块出现，前一章的 public API 与测试被视为冻结，避免未来的复杂性倒灌回基础概念。
+          </p>
+        </div>
+
+        <ol class="learning-path">
+          <li>
+            <span class="path-number">00</span>
+            <div><h3>先看见设备边界</h3><p>创建 CPU tensor、显式复制到 GPU、同步计时、只把最终 token 带回 CPU。</p></div>
+            <span class="path-tag">FOUNDATION</span>
+          </li>
+          <li>
+            <span class="path-number">01–02</span>
+            <div><h3>建立单请求 oracle</h3><p>实现 toy causal attention、连续 KV cache 与 reference runner，保证 cache 不改变语义。</p></div>
+            <span class="path-tag">CORRECTNESS</span>
+          </li>
+          <li>
+            <span class="path-number">03–05</span>
+            <div><h3>把 cache 变成资源</h3><p>预分配 GPU slot，明确 request 生命周期，再在 token budget 下做连续批处理。</p></div>
+            <span class="path-tag">ENGINE</span>
+          </li>
+          <li>
+            <span class="path-number">06a–08a</span>
+            <div><h3>从引擎走向服务</h3><p>先验证 block table 元数据，再添加 HTTP 门面与 CUDA event benchmark。</p></div>
+            <span class="path-tag">SERVING</span>
+          </li>
+          <li>
+            <span class="path-number">09–11</span>
+            <div><h3>连接真实 Qwen</h3><p>保留 Transformers generate 为 oracle，用 FP32 验证 native cache，再写最小 adapter。</p></div>
+            <span class="path-tag">BRIDGE</span>
+          </li>
+          <li>
+            <span class="path-number">12–13a</span>
+            <div><h3>观察 GQA，固定服务边界</h3><p>按 KV heads 估算真实显存，提供单请求 HTTP baseline，不伪称已有生产调度。</p></div>
+            <span class="path-tag">REAL MODEL</span>
+          </li>
+        </ol>
+      </section>
+
+      <section class="evidence-section shell" id="evidence" aria-labelledby="evidence-title">
+        <div class="evidence-copy">
+          <p class="section-kicker">04 / EVIDENCE, NOT GUESSWORK</p>
+          <h2 id="evidence-title">“更快”之前，<br />先回答“仍然正确吗？”</h2>
+          <p>
+            每条优化路径都保留参考实现。toy path 比较 full recompute 与 cached decode；真实模型 path 比较 native cache、完整前向和 Transformers generate。资源层还要证明 slot 与 block 不泄漏。
+          </p>
+          <a class="text-link" href="https://github.com/yuyuyu258963/y_llm/blob/master/docs/incremental-contract.md">查看增量架构契约 <span>→</span></a>
+        </div>
+        <div class="evidence-panel">
+          <div class="evidence-row"><span class="check">✓</span><div><b>数学正确性</b><small>cached decode logits = full-context logits</small></div></div>
+          <div class="evidence-row"><span class="check">✓</span><div><b>调度正确性</b><small>连续批处理输出 = 单请求 reference</small></div></div>
+          <div class="evidence-row"><span class="check">✓</span><div><b>资源正确性</b><small>slot / block 不重用、不泄漏、可释放</small></div></div>
+          <div class="evidence-row"><span class="check">✓</span><div><b>真实模型正确性</b><small>HF adapter token IDs = native generate</small></div></div>
+          <div class="command-block"><span>$</span><code>python -m unittest discover -s tests -v</code></div>
+        </div>
+      </section>
+
+      <section class="boundary-section shell" aria-labelledby="boundary-title">
+        <div class="section-kicker">05 / HONEST SCOPE</div>
+        <div class="section-heading compact"><h2 id="boundary-title">清楚区分已完成、正在解释与留待下一章的部分。</h2></div>
+        <div class="boundary-grid">
+          <article class="boundary-card done-card">
+            <p><span></span> CURRENTLY IMPLEMENTED</p>
+            <ul>
+              <li>单卡 toy engine、连续 KV pool 与 continuous batching</li>
+              <li>request 状态机、block table、HTTP service 与 benchmark</li>
+              <li>Qwen native cache parity、GQA layout、单请求 HF service</li>
+            </ul>
+          </article>
+          <article class="boundary-card next-card">
+            <p><span></span> DELIBERATELY NEXT</p>
+            <ul>
+              <li>06b / 12b：layer-aware paged K/V gather 与 logits parity</li>
+              <li>13b：真实模型的连续批处理与 cache 所有权</li>
+              <li>07b / 08b：streaming、TTFT、token/s 与峰值显存</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <section class="closing shell">
+        <div>
+          <p class="section-kicker">READY WHEN YOU ARE</p>
+          <h2>从第 00 章开始，<br /><em>让每一次优化都有证据。</em></h2>
+        </div>
+        <div class="closing-actions">
+          <a class="button button-primary" href="https://github.com/yuyuyu258963/y_llm/blob/master/docs/learning-guide.md">开始完整教程 <span>↗</span></a>
+          <a class="button button-quiet" href="https://github.com/yuyuyu258963/y_llm">查看源码 <span>↗</span></a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer shell">
+      <span>mini-vLLM · Teaching-first inference systems</span>
+      <a href="https://github.com/yuyuyu258963/y_llm">yuyuyu258963/y_llm ↗</a>
+    </footer>
+  </body>
+</html>

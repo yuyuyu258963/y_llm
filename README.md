@@ -4,7 +4,7 @@
 
 `mini-vLLM` 是一套教学优先的增量式教程与代码库。它不试图把生产版 vLLM 的 CUDA kernel、分布式并行和全部调度策略压缩到几百行；它要做的是把一个推理服务真正需要解决的问题逐个拆开，并在每一步留下可以运行、可以测试、可以和前一步对照的实现。
 
-**课程导航：** [`docs/index.md`](docs/index.md) · [完整学习指南](docs/learning-guide.md) · [真实模型扩展](docs/hf-track.md)
+**课程导航：** [`docs/index.html`](docs/index.html) · [完整学习指南](docs/learning-guide.md) · [真实模型扩展](docs/hf-track.md)
 
 ---
 
